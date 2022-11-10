@@ -1,9 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  purge: {
-    enabled: true,
-    content: ["./src/**/*.elm"],
-  },
+  content: ["./src/**/*.elm"],
   theme: {
     fontFamily: {
       mono: ["Fira Code"],
