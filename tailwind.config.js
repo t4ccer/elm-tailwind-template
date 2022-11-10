@@ -1,16 +1,23 @@
+/** @type {import('tailwindcss').Config} */
 module.exports = {
-    purge: {
-        enabled: true,
-        content: [
-            './src/**/*.elm'
-        ]
+  purge: {
+    enabled: true,
+    content: ["./src/**/*.elm"],
+  },
+  theme: {
+    fontFamily: {
+      mono: ["Fira Code"],
     },
-    darkMode: false, // or 'media' or 'class'
-    theme: {
-        extend: {},
+    colors: {
+      gray: "#222222",
+      "light-gray": "#333333",
+      white: "#dddddd",
+      orange: "#fd971f",
+      yellow: "#e6db74",
+      purple: "#9d65ff",
+      cyan: "#4eb4fa",
+      pink: "#f92672",
+      green: "#a7e22e",
     },
-    variants: {
-        extend: {},
-    },
-    plugins: [],
-}
+  },
+};
