@@ -9,7 +9,9 @@
     nixpkgs,
     ...
   }: let
-    defaultSystems = nixpkgs.lib.systems.flakeExposed;
+    # TODO: Figure out to make CI work with it
+    # defaultSystems = nixpkgs.lib.systems.flakeExposed;
+    defaultSystems = ["x86_64-linux"];
     perSystem = nixpkgs.lib.genAttrs defaultSystems;
     pkgsFor = system: nixpkgs.legacyPackages.${system};
     formattersFor = system:
@@ -99,6 +101,20 @@
           cp -r package/public $out
         '';
       };
+    formatCheckFor = system: let
+      pkgs = pkgsFor system;
+    in
+      pkgs.runCommandNoCC "format-check"
+      {
+        nativeBuildInputs = formattersFor system;
+      } ''
+        export LC_CTYPE=C.UTF-8
+        export LC_ALL=C.UTF-8
+        export LANG=C.UTF-8
+        cd ${self}
+        make formatCheck
+        mkdir $out
+      '';
   in {
     devShells = perSystem (system: let
       pkgs = pkgsFor system;
@@ -114,19 +130,17 @@
           ];
       };
     });
-    packages = perSystem (system: {
+    packages = perSystem (system: rec {
       myElmApp = mkElmApplication {
         inherit system;
         name = "my-elm-app";
         src = ./.;
       };
+      default = myElmApp;
     });
     checks = perSystem (system: {
-      formatCheck = {};
+      formatCheck = formatCheckFor system;
     });
     inherit mkElmApplication;
-    herculesCI = {
-      ciSystems = ["x86_64-linux"];
-    };
   };
 }
