@@ -125,5 +125,8 @@
       formatCheck = {};
     });
     inherit mkElmApplication;
+    herculesCI = {
+      ciSystems = ["x86_64-linux"];
+    };
   };
 }
