@@ -11,3 +11,8 @@ formatCheck:
 	elm-format --validate $(ELM_SOURCES)
 	prettier --check $(JS_SOURCES)
 	alejandra --check $(NIX_SOURCES)
+
+regen:
+	elm2nix convert > elm-srcs.nix
+	yarn2nix > yarn.nix
+	make format
