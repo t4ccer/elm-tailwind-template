@@ -12,10 +12,18 @@
     defaultSystems = nixpkgs.lib.systems.flakeExposed;
     perSystem = nixpkgs.lib.genAttrs defaultSystems;
     pkgsFor = system: nixpkgs.legacyPackages.${system};
+    formattersFor = system:
+      with (pkgsFor system); [
+        elmPackages.elm-format
+        nodePackages.prettier
+        alejandra
+        fd
+      ];
     mkElmApplication = {
       system,
       name,
       src,
+      minify ? true,
       elm-srcs ? ./elm-srcs.nix,
       elm-registry ? ./registry.dat,
       packageJSON ? ./package.json,
@@ -58,7 +66,11 @@
           cp --no-preserve=all -r $src/public build/public
           cp --no-preserve=all -r $src/src build/src
           mkdir -p build/public/assets/js/
-          cp ${compile-elm}/Main.js build/public/assets/js/elm.js
+          cp ${compile-elm}/Main${
+            if minify
+            then ".min"
+            else ""
+          }.js build/public/assets/js/elm.js
         '';
         installPhase = "
             cp -r build $out
@@ -92,24 +104,26 @@
       pkgs = pkgsFor system;
     in {
       default = pkgs.mkShell {
-        nativeBuildInputs = [
-          pkgs.elmPackages.elm
-          pkgs.elm2nix
-          pkgs.yarn2nix
-          pkgs.elmPackages.elm-format
-          pkgs.yarn
-          pkgs.nodePackages.prettier
-          pkgs.alejandra
-          pkgs.fd
-        ];
+        nativeBuildInputs =
+          (formattersFor system)
+          ++ [
+            pkgs.elmPackages.elm
+            pkgs.elm2nix
+            pkgs.yarn2nix
+            pkgs.yarn
+          ];
       };
     });
     packages = perSystem (system: {
-      my-elm-app = mkElmApplication {
+      myElmApp = mkElmApplication {
         inherit system;
         name = "my-elm-app";
         src = ./.;
       };
     });
+    checks = perSystem (system: {
+      formatCheck = {};
+    });
+    inherit mkElmApplication;
   };
 }
