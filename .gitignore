@@ -5,3 +5,4 @@ yarn-error.log
 public/assets/css/*
 public/assets/js/*
 result*
+/.pre-commit-config.yaml

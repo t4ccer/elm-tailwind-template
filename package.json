@@ -1,29 +1,29 @@
 {
-    "name": "test-elm",
-    "version": "1.0.0",
-    "main": "index.js",
-    "license": "GPL-3.0-or-later",
-    "scripts": {
-        "clean": "rm -rf elm-stuff",
-        "compile:elm": "elm make src/Main.elm --output=public/assets/js/elm.js",
-        "compile:css": "postcss public/assets/pcss/styles.pcss -o public/assets/css/styles.css",
-        "compile": "run-p compile:elm compile:css",
-        "dev": "run-p watch serve",
-        "build": "elm make src/Main.elm --output=public/assets/js/elm.js --optimize",
-        "watch:elm": "watch 'yarn run compile:elm' src",
-        "watch:css": "watch 'yarn run compile:css' public/assets/pcss/ src",
-        "watch": "run-p watch:elm watch:css"
-    },
-    "devDependencies": {
-        "autoprefixer": "^10.4.13",
-        "npm-run-all": "^4.1.5",
-        "postcss": "^8.4.18",
-        "postcss-cli": "^10.0.0",
-        "run-p": "^0.0.0",
-        "tailwindcss": "^3.2.3",
-        "watch": "^1.0.2"
-    },
-    "dependencies": {
-        "serve": "^14.1.1"
-    }
+  "name": "test-elm",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "GPL-3.0-or-later",
+  "scripts": {
+    "clean": "rm -rf elm-stuff",
+    "compile:elm": "elm make src/Main.elm --output=public/assets/js/elm.js",
+    "compile:css": "postcss public/assets/pcss/styles.pcss -o public/assets/css/styles.css",
+    "compile": "run-p compile:elm compile:css",
+    "dev": "run-p watch serve",
+    "build": "elm make src/Main.elm --output=public/assets/js/elm.js --optimize",
+    "watch:elm": "watch 'yarn run compile:elm' src",
+    "watch:css": "watch 'yarn run compile:css' public/assets/pcss/ src",
+    "watch": "run-p watch:elm watch:css"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.13",
+    "npm-run-all": "^4.1.5",
+    "postcss": "^8.4.18",
+    "postcss-cli": "^10.0.0",
+    "run-p": "^0.0.0",
+    "tailwindcss": "^3.2.3",
+    "watch": "^1.0.2"
+  },
+  "dependencies": {
+    "serve": "^14.1.1"
+  }
 }
