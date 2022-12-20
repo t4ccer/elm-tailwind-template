@@ -42,15 +42,12 @@
           hooks = {
             alejandra.enable = true;
             prettier.enable = true;
-            elm-format = {
-              enable = true;
-              # files = pkgs.lib.mkOverride 1 "src/Main.elm";
-            };
+            elm-format.enable = true;
           };
         };
         elmApps = {
           testElmApp = {
-            src = ./.;
+            src = ./example;
           };
         };
         devShells.default = pkgs.mkShell {

@@ -1,8 +1,8 @@
 .direnv
-elm-stuff
-node_modules
-yarn-error.log
-public/assets/css/*
-public/assets/js/*
+example/elm-stuff
+example/node_modules
+example/yarn-error.log
+example/public/assets/css/*
+example/public/assets/js/*
 result*
 /.pre-commit-config.yaml
