@@ -74,6 +74,11 @@ in {
               example = "yarn --offline something";
               description = "Extra commands to run after Elm compilation";
             };
+            server = lib.mkOption {
+              type = types.enum ["none" "single-page" "multi-page"];
+              default = "none";
+              description = "Whether to create a server for this Elm application";
+            };
           };
         });
       in {
@@ -82,6 +87,43 @@ in {
         };
 
         config = let
+          mkServer = name: app: let
+            typeSpecificConfig =
+              {
+                single-page = ''
+                  location / {
+                      try_files $uri $uri/ $uri.html /index.html;
+                  }'';
+                multi-page = "";
+              }
+              .${app.server};
+            config = pkgs.writeTextFile {
+              name = "elm-app-server-${name}-nginx.conf";
+              text = ''
+                pid /tmp/nginx.pid;
+                daemon off;
+                error_log /tmp/error.log;
+                events {}
+                http {
+                    default_type  application/octet-stream;
+                    include       ${pkgs.nginx}/conf/mime.types;
+                    server {
+                        listen 8080;
+                        access_log /tmp/access.log;
+                        gzip on;
+                        gzip_types application/javascript application/json text/css;
+                        # where the root here
+                        root ${mkPackage name app};
+                        # what file to server as index
+                        index index.html;
+                        ${typeSpecificConfig}
+                    }
+                }
+              '';
+            };
+          in
+            pkgs.writeShellScriptBin "${name}Server" ''
+              ${pkgs.nginx}/bin/nginx -c ${config}'';
           mkPackage = name: app: let
             mkElmPackage = ((import nix/elm.nix) {inherit pkgs;}).mkElmPackage;
             compile-elm = mkElmPackage {
@@ -93,26 +135,22 @@ in {
               srcdir = "./src";
               outputJavaScript = true;
             };
-            copy-elm =
-              pkgs.stdenv.mkDerivation {
-                name = "${name}-copy-elm";
-                src = app.src;
-                buildPhase = ''
-                  mkdir build
-                  cp --no-preserve=all $src/package.json $src/postcss.config.js $src/tailwind.config.js build/.
-                  cp --no-preserve=all -r $src/public build/public
-                  cp --no-preserve=all -r $src/src build/src
-                  mkdir -p build/public/assets/js/
-                  cp ${compile-elm}/Main${
-                    if app.minify
-                    then ".min"
-                    else ""
-                  }.js build/public/assets/js/elm.js
-                '';
-                installPhase = "
-            cp -r build $out
-          ";
-              };
+            copy-elm = pkgs.stdenv.mkDerivation {
+              name = "${name}-copy-elm";
+              src = app.src;
+              buildPhase = ''
+                cp --no-preserve=all -r $src build
+                mkdir -p build/public/assets/js/
+                cp ${compile-elm}/Main${
+                  if app.minify
+                  then ".min"
+                  else ""
+                }.js build/public/assets/js/elm.js
+              '';
+              installPhase = ''
+                cp -r build $out
+              '';
+            };
             postcomp = pkgs.mkYarnPackage {
               name = "${name}-postcomp";
               src = "${copy-elm}";
@@ -145,9 +183,15 @@ in {
             };
         in {
           packages =
-            lib.mapAttrs
-            (name: app: mkPackage name app)
-            config.elmApps;
+            (lib.mapAttrs
+              (name: app: mkPackage name app)
+              config.elmApps)
+            // (lib.mapAttrs'
+              (name: app: {
+                name = "${name}Server";
+                value = mkServer name app;
+              })
+              (lib.filterAttrs (_: app: app.server != "none") config.elmApps));
         };
       });
   };

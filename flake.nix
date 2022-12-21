@@ -48,6 +48,7 @@
         elmApps = {
           testElmApp = {
             src = ./example;
+            server = "single-page";
           };
         };
         devShells.default = pkgs.mkShell {
