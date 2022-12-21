@@ -74,10 +74,17 @@ in {
               example = "yarn --offline something";
               description = "Extra commands to run after Elm compilation";
             };
-            server = lib.mkOption {
-              type = types.enum ["none" "single-page" "multi-page"];
-              default = "none";
-              description = "Whether to create a server for this Elm application";
+            server = {
+              mode = lib.mkOption {
+                type = types.enum ["none" "single-page" "multi-page"];
+                default = "none";
+                description = "Whether to create a server for this Elm application";
+              };
+              port = lib.mkOption {
+                type = types.int;
+                default = 8080;
+                description = "Port to run the server on";
+              };
             };
           };
         });
@@ -96,25 +103,23 @@ in {
                   }'';
                 multi-page = "";
               }
-              .${app.server};
+              .${app.server.mode};
             config = pkgs.writeTextFile {
               name = "elm-app-server-${name}-nginx.conf";
               text = ''
-                pid /tmp/nginx.pid;
+                pid /tmp/elm-app-server-${name}-nginx.pid;
                 daemon off;
-                error_log /tmp/error.log;
+                error_log /tmp/elm-app-server-${name}-error.log;
                 events {}
                 http {
                     default_type  application/octet-stream;
                     include       ${pkgs.nginx}/conf/mime.types;
                     server {
-                        listen 8080;
-                        access_log /tmp/access.log;
+                        listen ${toString app.server.port};
+                        access_log /tmp/elm-app-server-${name}-access.log;
                         gzip on;
                         gzip_types application/javascript application/json text/css;
-                        # where the root here
                         root ${mkPackage name app};
-                        # what file to server as index
                         index index.html;
                         ${typeSpecificConfig}
                     }
@@ -123,7 +128,7 @@ in {
             };
           in
             pkgs.writeShellScriptBin "${name}Server" ''
-              ${pkgs.nginx}/bin/nginx -c ${config}'';
+              ${pkgs.nginx}/bin/nginx -c ${config} -e /tmp/elm-app-server-${name}-err.log'';
           mkPackage = name: app: let
             mkElmPackage = ((import nix/elm.nix) {inherit pkgs;}).mkElmPackage;
             compile-elm = mkElmPackage {
@@ -191,7 +196,7 @@ in {
                 name = "${name}Server";
                 value = mkServer name app;
               })
-              (lib.filterAttrs (_: app: app.server != "none") config.elmApps));
+              (lib.filterAttrs (_: app: app.server.mode != "none") config.elmApps));
         };
       });
   };
