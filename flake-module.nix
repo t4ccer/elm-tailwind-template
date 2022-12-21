@@ -128,6 +128,7 @@ in {
             };
           in
             pkgs.writeShellScriptBin "${name}Server" ''
+              echo "Running ${name} server on port ${toString app.server.port}"
               ${pkgs.nginx}/bin/nginx -c ${config} -e /tmp/elm-app-server-${name}-err.log'';
           mkPackage = name: app: let
             mkElmPackage = ((import nix/elm.nix) {inherit pkgs;}).mkElmPackage;
@@ -186,6 +187,7 @@ in {
                 cp -r package/public $out
               '';
             };
+          elmAppsWithServers = lib.filterAttrs (name: app: app.server.mode != "none") config.elmApps;
         in {
           packages =
             (lib.mapAttrs
@@ -196,7 +198,14 @@ in {
                 name = "${name}Server";
                 value = mkServer name app;
               })
-              (lib.filterAttrs (_: app: app.server.mode != "none") config.elmApps));
+              elmAppsWithServers);
+          apps =
+            lib.mapAttrs
+            (name: app: {
+              type = "app";
+              program = "${mkServer name app}/bin/${name}Server";
+            })
+            elmAppsWithServers;
         };
       });
   };
